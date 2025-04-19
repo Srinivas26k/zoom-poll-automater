@@ -18,12 +18,13 @@ def run_loop(zoom_token, meeting_id, duration, device):
         console.log(f"[blue]▶️  Cycle {cycle}[/]")
         try:
             # 1) Record
-            record_segment(duration, output="segment.wav", device=device)
+            record_segment(duration=duration, output="segment.wav", device=device)
 
             # 2) Transcribe
             text = transcribe_segment("segment.wav")
             if not text.strip():
                 console.log("[yellow]⚠️ Empty transcript—skipping poll[/]")
+                time.sleep(5)  # Wait a bit before next cycle
                 continue
 
             # 3) Generate poll
@@ -40,6 +41,7 @@ def run_loop(zoom_token, meeting_id, duration, device):
 
         except Exception as e:
             console.log(f"[red]❌ Error in run_loop:[/] {e}")
+            time.sleep(5)  # Pause on error to avoid rapid error loops
 
         # small pause before next cycle
         time.sleep(1)
