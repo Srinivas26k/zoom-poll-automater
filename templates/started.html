@@ -1,8 +1,65 @@
 <!-- templates/started.html -->
 <!DOCTYPE html>
-<html><head><title>Started</title></head>
+<html>
+<head>
+  <title>Zoom Poll Automation Started</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #0066FF;
+    }
+    .container {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .status {
+      background: #e1f5fe;
+      padding: 15px;
+      border-left: 4px solid #0288d1;
+      margin: 20px 0;
+    }
+    button {
+      background: #f44336;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #d32f2f;
+    }
+  </style>
+</head>
 <body>
-  <h1>🚀 Automation Started</h1>
-  <p>Check your console for live logs. </p>
-  <p>To stop, press Ctrl +C in this terminal.</p>
-</body></html>
+  <div class="container">
+    <h1>🚀 Automation Started</h1>
+    
+    <div class="status">
+      <h3>Status: Running</h3>
+      <p>The poll automation is now running. Check your terminal for live logs.</p>
+    </div>
+    
+    <p><strong>What's happening:</strong></p>
+    <ol>
+      <li>Recording audio at specified intervals</li>
+      <li>Transcribing the audio using Whisper</li>
+      <li>Generating relevant polls with LLaMA based on transcript</li>
+      <li>Posting polls to your Zoom meeting</li>
+    </ol>
+    
+    <p><button onclick="window.location.href='/stop'">Stop Automation</button></p>
+    
+    <p><a href="/setup">Back to Setup</a></p>
+  </div>
+</body>
+</html>

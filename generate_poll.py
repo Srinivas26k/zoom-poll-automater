@@ -1,11 +1,16 @@
+# This file can be removed since functionality is now in poller.py
+# Keeping it with a note to avoid confusion
+
+# NOTE: This file is deprecated - use poller.py instead
+
 import json
 import os
 from openai import OpenAI
 
 # single client instance
 _client = OpenAI(
-    base_url = os.getenv("OLLAMA_URL"),
-    api_key  = os.getenv("OLLAMA_API_KEY")
+    base_url = os.getenv("OLLAMA_URL", "http://localhost:11434/v1"),
+    api_key  = "ollama"
 )
 
 def generate_poll(transcript: str):

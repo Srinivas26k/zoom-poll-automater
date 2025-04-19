@@ -23,7 +23,7 @@
       margin-bottom: 5px;
       font-weight: bold;
     }
-    input {
+    input, select {
       width: 100%;
       padding: 8px;
       margin-bottom: 15px;
@@ -48,10 +48,30 @@
       border-left: 4px solid #ffd600;
       margin-bottom: 20px;
     }
+    .flash {
+      background: #e8f5e9;
+      padding: 10px;
+      border-left: 4px solid #4caf50;
+      margin-bottom: 20px;
+    }
+    .flash.error {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
   </style>
 </head>
 <body>
   <h1>✅ Successfully Logged in with Zoom</h1>
+  
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="flash {% if 'error' in message.lower() %}error{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
   
   <div class="note">
     <p><strong>Important:</strong> To capture meeting audio, you'll need to configure your system's audio to route the meeting sound to your selected recording device.</p>
@@ -65,7 +85,7 @@
   <form method="post">
     <p>
       <label for="meeting_id">Meeting ID:</label>
-      <input name="meeting_id" id="meeting_id" required placeholder="Enter your Zoom meeting ID">
+      <input name="meeting_id" id="meeting_id" required placeholder="Enter your Zoom meeting ID (no spaces)">
     </p>
     
     <p>
@@ -76,8 +96,17 @@
     
     <p>
       <label for="device">Audio Device:</label>
-      <input name="device" id="device" placeholder="e.g. Stereo Mix (leave blank for default)">
-      <small>Enter your audio device name (partial match works)</small>
+      {% if devices %}
+        <select name="device" id="device">
+          <option value="">Default Device</option>
+          {% for device in devices %}
+            <option value="{{ device.name }}">{{ device.name }}</option>
+          {% endfor %}
+        </select>
+      {% else %}
+        <input name="device" id="device" placeholder="e.g. Stereo Mix (leave blank for default)">
+      {% endif %}
+      <small>Select your audio device for recording</small>
     </p>
     
     <button type="submit">Start Automation</button>

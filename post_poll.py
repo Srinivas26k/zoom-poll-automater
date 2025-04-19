@@ -1,3 +1,8 @@
+# This file can be removed since functionality is now in poller.py
+# Keeping it with a note to avoid confusion
+
+# NOTE: This file is deprecated - use poller.py instead
+
 import requests, os
 
 POLL_TITLE = os.getenv("POLL_TITLE", "Automated Poll")
