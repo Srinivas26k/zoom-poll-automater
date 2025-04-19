@@ -8,24 +8,12 @@ from poller import generate_poll_from_transcript, post_poll_to_zoom
 
 console = Console()
 
-def run_loop(zoom_token, meeting_id, duration, device, should_stop=None):
+def run_loop(zoom_token, meeting_id, duration, device):
     """
     Forever: record → transcribe → generate + post poll → delete files
-    
-    Args:
-        zoom_token: Zoom OAuth token
-        meeting_id: Zoom meeting ID
-        duration: Recording duration in seconds
-        device: Audio device name (or None for default)
-        should_stop: Reference to a boolean flag to check for stop signal
     """
     cycle = 0
     while True:
-        # Check if we should stop
-        if should_stop and should_stop is True:
-            console.log("[yellow]⚠️ Stopping automation due to stop signal[/]")
-            break
-            
         cycle += 1
         console.log(f"[blue]▶️  Cycle {cycle}[/]")
         try:
@@ -40,10 +28,10 @@ def run_loop(zoom_token, meeting_id, duration, device, should_stop=None):
                 continue
 
             # 3) Generate poll
-            title, q, opts = generate_poll_from_transcript(text)
+            title, question, options = generate_poll_from_transcript(text)
 
             # 4) Post poll
-            post_poll_to_zoom(title, q, opts, meeting_id, zoom_token)
+            post_poll_to_zoom(title, question, options, meeting_id, zoom_token)
 
             # 5) Cleanup
             for f in ("segment.wav", "temp_stereo.wav"):
