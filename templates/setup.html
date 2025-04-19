@@ -1,0 +1,26 @@
+<!-- templates/setup.html -->
+<!DOCTYPE html>
+<html><head><title>Setup</title></head>
+<body>
+  <h1>✅ Logged in!</h1>
+  <p>Your Zoom Access Token:</p>
+  <pre style="background:#f0f0f0;padding:1em;">{{ token }}</pre>
+  <form method="post">
+    <p>
+      <label>Meeting ID:
+        <input name="meeting_id" required>
+      </label>
+    </p>
+    <p>
+      <label>Segment duration (sec):
+        <input name="duration" value="60" required>
+      </label>
+    </p>
+    <p>
+      <label>Audio device (leave blank for default):
+        <input name="device" placeholder="e.g. Microphone Array (Realtek...)">
+      </label>
+    </p>
+    <button type="submit">Start Automation</button>
+  </form>
+</body></html>

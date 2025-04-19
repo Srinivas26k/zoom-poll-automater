@@ -1,0 +1,10 @@
+Flask>=2.0
+python-dotenv>=0.21
+requests>=2.25
+openai>=0.27
+whisper @ git+https://github.com/openai/whisper.git@main
+sounddevice>=0.4
+soundfile>=0.11
+librosa>=0.10
+numpy>=1.23
+rich>=12
