@@ -5,8 +5,8 @@ from rich.panel import Panel
 
 from audio_capture    import record_segment
 from transcribe_whisper import transcribe_segment
-from generate_poll    import generate_poll
-from post_poll        import post_poll
+from extra.generate_poll    import generate_poll
+from extra.post_poll        import post_poll
 
 console = Console()
 load_dotenv()  # reads .env

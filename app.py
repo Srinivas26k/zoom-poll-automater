@@ -13,7 +13,7 @@ app.secret_key = config.SECRET_TOKEN or os.urandom(24)  # Fallback for secret ke
 
 # Store the background thread
 automation_thread = None
-should_stop = False  # Flag to signal thread to stop
+should_stop = threading.Event()  # Use an Event for thread communication
 
 # ─── 1) Home: OAuth or Setup ────────────────────────────────────────────────────
 @app.route("/")
@@ -107,7 +107,7 @@ def oauth_callback():
 # ─── 4) Setup page ──────────────────────────────────────────────────────────────
 @app.route("/setup", methods=["GET","POST"])
 def setup():
-    global automation_thread, should_stop
+    global automation_thread
     
     if "zoom_token" not in session:
         return redirect(url_for("index"))
@@ -139,10 +139,10 @@ def setup():
         # Stop existing thread if running
         if automation_thread and automation_thread.is_alive():
             console.log("[yellow]⚠️ Stopping existing automation thread[/]")
-            should_stop = True
+            should_stop.set()  # Signal the thread to stop
             # Give time for thread to clean up
             time.sleep(2)
-            should_stop = False
+            should_stop.clear()  # Reset the flag for next thread
         
         # Test Ollama connection before starting thread
         try:
@@ -196,7 +196,7 @@ def setup():
 @app.route("/stop")
 def stop():
     global should_stop
-    should_stop = True
+    should_stop.set()  # Signal the thread to stop
     flash("Automation has been signaled to stop.")
     return redirect(url_for("setup"))
 
