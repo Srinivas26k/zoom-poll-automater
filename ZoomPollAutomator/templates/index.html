@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zoom Poll Automator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #2d3748;
+        }
+        h1 {
+            color: #2b6cb0;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background: #2b6cb0;
+        }
+        p {
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zoom Poll Automator</h1>
+        <p><a href="{{ url_for('authorize') }}" class="btn">Start Zoom OAuth Process</a></p>
+        <p style="text-align: center;">Please use the main application GUI to start setup.</p>
+    </div>
+</body>
+</html>

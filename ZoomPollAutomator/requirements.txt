@@ -1,0 +1,13 @@
+Flask>=2.0
+python-dotenv>=0.21
+requests>=2.25
+openai>=1.0
+git+https://github.com/openai/whisper.git
+sounddevice>=0.4
+soundfile>=0.11
+librosa>=0.10
+numpy>=1.23
+waitress>=3.0
+customtkinter>=5.0
+pyinstaller>=6.0  # Added for creating executable
+# Remove 'rich' as we are using standard logging now

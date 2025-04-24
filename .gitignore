@@ -1,3 +1,15 @@
-__pycache__
-venv
-.env
+# Ignore Python cache directories
+__pycache__/
+**/__pycache__/
+
+# Ignore virtual environments
+venv/
+*.env
+
+# Ignore specific folders in ZoomPollAutomator
+ZoomPollAutomator/dist/
+ZoomPollAutomator/build/
+ZoomPollAutomator/ZoomPollAutomator.spec
+
+# Ignore logs and entire ZoomPollAutomator directory
+ZoomPollAutomator/logs/
