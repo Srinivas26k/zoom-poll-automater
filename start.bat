@@ -73,16 +73,16 @@ if %ERRORLEVEL% NEQ 0 (
     echo [92m✓ Dependencies installed[0m
 )
 
-:: Check required models and components
-echo [93mChecking required components...[0m
-python zoompoller.py check
+:: Check system status
+echo [93mChecking system status...[0m
+python zoompoller.py status
 if %ERRORLEVEL% NEQ 0 (
-    echo [91m[ERROR] Component check failed! Please fix the issues above.[0m
+    echo [91m[ERROR] System check failed! Please fix the issues above.[0m
     pause
     exit /b 1
 )
 
-:: Run setup if no .env exists
+:: First time setup if needed
 if not exist ".env" (
     echo [93mFirst time setup needed...[0m
     python zoompoller.py setup
@@ -96,6 +96,6 @@ if not exist ".env" (
 :: Start the automation
 echo.
 echo [92mStarting Zoom Poll Automator...[0m
-python zoompoller.py run
+python zoompoller.py start --duration 60
 
 pause
