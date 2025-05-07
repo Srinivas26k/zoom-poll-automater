@@ -1,7 +1,66 @@
 <!-- templates/index.html -->
 <!DOCTYPE html>
-<html><head><title>Zoom Poll Automator</title></head>
+<html>
+<head>
+    <title>Zoom Poll Automator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            text-align: center;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+        .btn-primary {
+            background: #2D8CFF;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .error {
+            color: #dc3545;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
 <body>
-  <h1>Zoom Poll Automator</h1>
-  <p><a href="{{ url_for('authorize') }}">🔐 Log in with Zoom</a></p>
-</body></html>
+    <div class="container">
+        <h1>Welcome to Zoom Poll Automator</h1>
+        <p>Automatically generate and post polls in your Zoom meetings based on ongoing discussions.</p>
+        
+        <div style="margin: 2rem 0;">
+            <a href="{{ url_for('authorize') }}" class="btn btn-primary">Login with Zoom</a>
+            <a href="{{ url_for('show_config') }}" class="btn btn-secondary">Configure Zoom Credentials</a>
+        </div>
+
+        <div style="margin-top: 2rem; text-align: left;">
+            <h3>Getting Started:</h3>
+            <ol>
+                <li>First, configure your Zoom credentials</li>
+                <li>Login with your Zoom account</li>
+                <li>Enter your meeting details</li>
+                <li>Start the automation!</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

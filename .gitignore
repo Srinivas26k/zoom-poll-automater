@@ -4,7 +4,7 @@ __pycache__/
 
 # Ignore virtual environments
 venv/
-*.env
+.env
 
 # Ignore specific folders in ZoomPollAutomator
 ZoomPollAutomator/dist/

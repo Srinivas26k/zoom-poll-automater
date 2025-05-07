@@ -2,9 +2,13 @@
 from flask import Flask, redirect, url_for, session, request, render_template, flash
 import requests, base64, threading, os, time
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.live import Live
+from rich.panel import Panel
 from run_loop import run_loop
 import config
 from audio_capture import list_audio_devices
+from urllib.parse import urlencode
 
 console = Console()
 
@@ -37,72 +41,57 @@ def index():
 # ─── 2) Start OAuth ─────────────────────────────────────────────────────────────
 @app.route("/authorize")
 def authorize():
-    # Verify configuration
+    """Handle OAuth authorization initiation"""
     if not config.CLIENT_ID or not config.CLIENT_SECRET:
         error = "Missing CLIENT_ID or CLIENT_SECRET in .env file"
         console.log(f"[red]❌ {error}[/]")
         return render_template("error.html", error=error)
-        
-    scopes = "meeting:read:meeting_transcript meeting:read:list_meetings " \
-             "meeting:read:poll meeting:read:token meeting:write:poll " \
-             "meeting:update:poll user:read:zak zoomapp:inmeeting"
-    params = {
-        "response_type": "code",
-        "client_id":     config.CLIENT_ID,
-        "redirect_uri":  config.REDIRECT_URI,
-        "scope":         scopes
-    }
-    url = "https://zoom.us/oauth/authorize"
-    auth_url = f"{url}?{'&'.join(f'{k}={v}' for k,v in params.items())}"
-    console.log(f"Redirecting to: {auth_url}")
+
+    # Use exact Zoom authorization URL format
+    auth_url = (
+        "https://zoom.us/oauth/authorize?"
+        f"response_type=code&"
+        f"client_id={config.CLIENT_ID}&"
+        f"redirect_uri={config.REDIRECT_URI}"
+    )
+    
+    console.log(f"[blue]Redirecting to:[/]\n{auth_url}")
     return redirect(auth_url)
 
 # ─── 3) OAuth callback ──────────────────────────────────────────────────────────
 @app.route("/oauth/callback")
 def oauth_callback():
-    code = request.args.get("code")
-    error = request.args.get("error")
-    
-    if error:
-        error_description = request.args.get("error_description", "Unknown error")
-        console.log(f"[red]OAuth error: {error} - {error_description}[/]")
-        return render_template("error.html", error=f"OAuth error: {error_description}")
-        
+    """Handle OAuth callback from Zoom"""
+    code = request.args.get('code')
     if not code:
-        return render_template("error.html", error="No authorization code returned")
+        error = "No authorization code received from Zoom"
+        console.log(f"[red]❌ {error}[/]")
+        return render_template("error.html", error=error)
 
-    # swap code for token
+    # Exchange code for access token
     token_url = "https://zoom.us/oauth/token"
-    creds = f"{config.CLIENT_ID}:{config.CLIENT_SECRET}".encode()
-    auth_header = base64.b64encode(creds).decode()
-    headers = {
-        "Authorization": f"Basic {auth_header}",
-        "Content-Type":  "application/x-www-form-urlencoded"
-    }
+    auth = (config.CLIENT_ID, config.CLIENT_SECRET)
     data = {
-        "grant_type":   "authorization_code",
-        "code":         code,
+        "grant_type": "authorization_code",
+        "code": code,
         "redirect_uri": config.REDIRECT_URI
     }
-    
+
     try:
-        r = requests.post(token_url, headers=headers, data=data)
-        if r.ok:
-            token_data = r.json()
-            token = token_data["access_token"]
-            expires_in = token_data.get("expires_in", 3600)  # Default to 1 hour
-            session["zoom_token"] = token
-            session["token_expiry"] = time.time() + expires_in
-            console.log("[green]✅ Obtained Zoom access token[/]")
-            return redirect(url_for("setup"))
-        else:
-            error_msg = f"Token error: {r.status_code} - {r.text}"
-            console.log(f"[red]{error_msg}[/]")
-            return render_template("error.html", error=error_msg)
+        response = requests.post(token_url, auth=auth, data=data)
+        response.raise_for_status()
+        tokens = response.json()
+        
+        # Store access token in session
+        session['zoom_token'] = tokens['access_token']
+        console.log("[green]✓[/] Successfully obtained Zoom access token")
+        
+        return render_template("setup.html")
+        
     except Exception as e:
-        error_msg = f"Error during token exchange: {str(e)}"
-        console.log(f"[red]{error_msg}[/]")
-        return render_template("error.html", error=error_msg)
+        error = f"Failed to obtain access token: {str(e)}"
+        console.log(f"[red]❌ {error}[/]")
+        return render_template("error.html", error=error)
 
 # ─── 4) Setup page ──────────────────────────────────────────────────────────────
 @app.route("/setup", methods=["GET","POST"])
@@ -199,6 +188,124 @@ def stop():
     should_stop.set()  # Signal the thread to stop
     flash("Automation has been signaled to stop.")
     return redirect(url_for("setup"))
+
+@app.route("/config", methods=["GET"])
+def show_config():
+    """Show the configuration form"""
+    return render_template("config.html")
+
+@app.route("/save_config", methods=["POST"])
+def save_config():
+    """Save Zoom credentials to .env file"""
+    client_id = request.form.get("client_id")
+    client_secret = request.form.get("client_secret")
+    redirect_uri = request.form.get("redirect_uri")
+
+    if not all([client_id, client_secret, redirect_uri]):
+        return render_template("config.html", error="All fields are required")
+
+    try:
+        # Read existing .env content
+        env_lines = []
+        if os.path.exists(".env"):
+            with open(".env", "r") as f:
+                env_lines = f.readlines()
+
+        # Update or add new values
+        updated = {"CLIENT_ID": False, "CLIENT_SECRET": False, "REDIRECT_URI": False}
+        
+        for i, line in enumerate(env_lines):
+            if line.startswith("CLIENT_ID="):
+                env_lines[i] = f"CLIENT_ID={client_id}\n"
+                updated["CLIENT_ID"] = True
+            elif line.startswith("CLIENT_SECRET="):
+                env_lines[i] = f"CLIENT_SECRET={client_secret}\n"
+                updated["CLIENT_SECRET"] = True
+            elif line.startswith("REDIRECT_URI="):
+                env_lines[i] = f"REDIRECT_URI={redirect_uri}\n"
+                updated["REDIRECT_URI"] = True
+
+        # Add any missing values
+        if not updated["CLIENT_ID"]:
+            env_lines.append(f"CLIENT_ID={client_id}\n")
+        if not updated["CLIENT_SECRET"]:
+            env_lines.append(f"CLIENT_SECRET={client_secret}\n")
+        if not updated["REDIRECT_URI"]:
+            env_lines.append(f"REDIRECT_URI={redirect_uri}\n")
+
+        # Ensure we have a SECRET_TOKEN
+        if not any(line.startswith("SECRET_TOKEN=") for line in env_lines):
+            env_lines.append(f"SECRET_TOKEN={os.urandom(24).hex()}\n")
+
+        # Ensure we have LLAMA_HOST
+        if not any(line.startswith("LLAMA_HOST=") for line in env_lines):
+            env_lines.append("LLAMA_HOST=http://localhost:11434\n")
+
+        # Write back to .env
+        with open(".env", "w") as f:
+            f.writelines(env_lines)
+
+        console.log("[green]✓[/] Configuration saved successfully")
+        return render_template("config.html", success="Configuration saved successfully! You can now proceed to OAuth login.")
+
+    except Exception as e:
+        console.log(f"[red]❌ Error saving configuration:[/] {str(e)}")
+        return render_template("config.html", error=f"Error saving configuration: {str(e)}")
+
+def run_automation(duration, device):
+    """Run the automation loop with progress indicators"""
+    console = Console()
+    
+    # Verify zoom token exists
+    if 'zoom_token' not in session:
+        console.print("[red]❌ No Zoom token found. Please run setup first.[/]")
+        return False
+        
+    # Progress spinner for initialization
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        # Initialize components
+        init_task = progress.add_task("[cyan]Initializing automation...", total=None)
+        time.sleep(1)  # Show initialization message
+        
+        try:
+            # Start the automation loop in a background thread
+            should_stop = threading.Event()
+            automation_thread = threading.Thread(
+                target=run_loop,
+                args=(session['zoom_token'], config.MEETING_ID, duration, device, should_stop),
+                daemon=True
+            )
+            automation_thread.start()
+            progress.update(init_task, description="[green]Automation started successfully!")
+            
+            # Show live status
+            with Live(console=console, refresh_per_second=4) as live:
+                try:
+                    while automation_thread.is_alive():
+                        live.update(Panel(
+                            "[green]🤖 Poll Automation Running[/green]\n\n"
+                            "🎙️ Recording and analyzing meeting audio\n"
+                            "Press Ctrl+C to stop",
+                            title="Status"
+                        ))
+                        time.sleep(0.25)
+                except KeyboardInterrupt:
+                    console.print("\n[yellow]Stopping automation...[/]")
+                    should_stop.set()
+                    automation_thread.join(timeout=5)
+                    console.print("[green]✓ Automation stopped successfully[/]")
+                    return True
+                    
+        except Exception as e:
+            progress.update(init_task, description=f"[red]Error: {str(e)}")
+            return False
+            
+    return True
 
 if __name__ == "__main__":
     console.log("[green]Zoom Poll Automator starting...[/]")
